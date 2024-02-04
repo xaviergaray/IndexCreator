@@ -13,8 +13,14 @@ def create_index(file_name, sort_by='Topic', title="", ignoreCase=True, ignoreSy
     # Read the Excel file
     df = pd.read_excel(file_name)
 
+    # Make all empty space an empty string
+    df = df.fillna('')
+
     # Make it all strings
     df = df.astype(str)
+
+    # Group by 'Topic' and join the 'Book' and 'Page' columns with a newline
+    df = df.groupby(sort_by).agg({'Book': '\n'.join, 'Page': '\n'.join, 'Notes': ' '.join}).reset_index()
 
     if ignoreCase:
         if ignoreSymbol:
