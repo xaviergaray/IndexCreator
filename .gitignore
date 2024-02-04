@@ -1,5 +1,6 @@
-/*.docx
-/*.xlsx
-/*.pdf
-/venv
+./*.docx
+./*.xlsx
+./*.pdf
+./docs/*
+./venv
 .DS_Store
