@@ -9,7 +9,7 @@ import re
 import argparse
 
 
-def create_index(file_name, sort_by='Topic', title="", ignoreCase=True, ignoreSymbol=True, groupNumbers=True):
+def create_index(file_name, sort_by, title, ignoreCase, ignoreSymbol, groupNumbers):
     # Read the Excel file
     df = pd.read_excel(file_name)
 
@@ -19,18 +19,24 @@ def create_index(file_name, sort_by='Topic', title="", ignoreCase=True, ignoreSy
     # Make it all strings
     df = df.astype(str)
 
-    # Group by 'Topic' and join the 'Book' and 'Page' columns with a newline
-    df = df.groupby(sort_by).agg({'Book': '\n'.join, 'Page': '\n'.join, 'Notes': ' '.join}).reset_index()
+    # Store all the header names
+    df_headers = df.columns.values.tolist()
+
+    # Define the aggregation function for all columns except the first one
+    agg_dict = {col: '\n'.join for col in df_headers[1:]}
+
+    # Group by the first column and apply the aggregation function
+    df = df.groupby(df_headers[0]).agg(agg_dict).reset_index()
 
     if ignoreCase:
         if ignoreSymbol:
-            # Sort the DataFrame by 'Topic' (case-insensitive and ignoring non-alphanumeric characters)
+            # Sort the DataFrame by sort_by (case-insensitive and ignoring non-alphanumeric characters)
             df = df.sort_values(sort_by, key=lambda col: col.str.lower().map(lambda x: re.sub(r'\W+', '', x)))
         else:
-            # Sort the DataFrame by 'Topic' (case-insensitive)
+            # Sort the DataFrame by sort_by (case-insensitive)
             df = df.sort_values(sort_by, key=lambda col: col.str.lower())
     elif ignoreSymbol:
-        # Sort the DataFrame by 'Topic' (ignoring non-alphanumeric characters)
+        # Sort the DataFrame by sort_by (ignoring non-alphanumeric characters)
         df = df.sort_values(sort_by, key=lambda col: col.str.map(lambda x: re.sub(r'\W+', '', x)))
     else:
         # Sort the DataFrame by 'Topic'
@@ -49,7 +55,7 @@ def create_index(file_name, sort_by='Topic', title="", ignoreCase=True, ignoreSy
     if title:
         heading_title = doc.add_heading(title, 0)
         run = heading_title.runs[0]
-        run.font.size = Pt(30)  # Set the font size to 30
+        run.font.size = Pt(30)
         heading_title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     # Initialize the current section
@@ -59,7 +65,7 @@ def create_index(file_name, sort_by='Topic', title="", ignoreCase=True, ignoreSy
     bShade = False
     # Iterate over the rows of the DataFrame
     for index, row in df.iterrows():
-        # Get the first letter of the 'Topic'
+        # Get the first letter of the sort_by
         section = next((char for char in row[sort_by] if (char.isalpha() or char.isnumeric())), '')
         if ignoreCase:
             section = section.upper()
@@ -71,7 +77,7 @@ def create_index(file_name, sort_by='Topic', title="", ignoreCase=True, ignoreSy
             bShade = False
             section_header = doc.add_heading(section, level=1)
             run = section_header.runs[0]
-            run.font.size = Pt(20)  # Set the font size to 20
+            run.font.size = Pt(20)
             section_header.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
             current_section = section
@@ -81,7 +87,7 @@ def create_index(file_name, sort_by='Topic', title="", ignoreCase=True, ignoreSy
             table.style = 'Table Grid'
 
             # Add the headers to the table
-            for i, header in enumerate(['Topic', 'Book', 'Page', 'Notes']):
+            for i, header in enumerate(df_headers):
                 cell = table.cell(0, i)
                 cell.text = header
                 paragraph = cell.paragraphs[0]
@@ -102,10 +108,8 @@ def create_index(file_name, sort_by='Topic', title="", ignoreCase=True, ignoreSy
                 shading_elm.append(parse_xml(r'<w:shd {} w:fill="E0E0E0"/>'.format(nsdecls('w'))))
                 cells[i]._tc.get_or_add_tcPr().append(shading_elm[i])
 
-        cells[0].text = f"{row['Topic']}"
-        cells[1].text = f"{row['Book']}"
-        cells[2].text = f"{row['Page']}"
-        cells[3].text = "" if pd.isna(row['Notes']) else f"{row['Notes']}"
+        for i, header in enumerate(df_headers):
+            cells[i].text = f"{row[header]}"
 
         bShade = not bShade
 
