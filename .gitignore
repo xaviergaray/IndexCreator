@@ -1,3 +1,6 @@
+*.xlsx
+*.docx
+*.pdf
 ./*.docx
 ./*.xlsx
 ./*.pdf
