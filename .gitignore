@@ -1,0 +1,5 @@
+/*.docx
+/*.xlsx
+/*.pdf
+/venv
+.DS_Store
