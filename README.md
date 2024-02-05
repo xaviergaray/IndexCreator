@@ -3,8 +3,10 @@
 Currently only the CLI is operational with plans to run the program on a website.
 ## Requirements
 * Python
-  * pandas
-  * docx
+  * pandas (pip install pandas)
+  * pyarrow (pip install pyarrow)
+  * docx (pip install python-docx)
+  * openpyxl (pip install openpyxl)
   * re
   * argparse
 * Excel file (xlsx) representing index
