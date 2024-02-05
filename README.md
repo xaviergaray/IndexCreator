@@ -1,4 +1,6 @@
 # Index Creator
+# Status
+Currently only the CLI is operational with plans to run the program on a website.
 ## Requirements
 * Python
   * pandas
